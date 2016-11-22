@@ -15,7 +15,6 @@ const defaultGradleBuildFile = "build.gradle"
 func main() {
 	buildFile := findFile(defaultGradleBuildFile, "")
 	gradleBinary := selectGradleBinary()
-	buildArgs := os.Args
 
 	if buildFile != "" {
 		os.Chdir(filepath.Dir(buildFile))
@@ -24,7 +23,7 @@ func main() {
 	}
 
 	log.Printf("Using %s to run build file %s \n", gradleBinary, buildFile)
-	cmd := exec.Command(gradleBinary, buildArgs[1:]...)
+	cmd := exec.Command(gradleBinary, os.Args[1:]...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
@@ -74,8 +73,8 @@ func findFile(file string, dir string) string {
 	result = filepath.Join(dir, file)
 	if dir != "/" {
 		if _, err := os.Stat(result); os.IsNotExist(err) {
-			findFile(file, filepath.Dir(dir))
 			result = ""
+			findFile(file, filepath.Dir(dir))
 		}
 	}
 	return result
