@@ -1,0 +1,14 @@
+before_script:
+  - export GOPATH=$(pwd)
+
+compile-go-1.7:
+  image: golang:1.7.1-alpine
+  stage: build
+  script:
+    - go build -v
+
+test-go-1.5:
+  image: golang:1.7.1-alpine
+  stage: test
+  script:
+    - go test -v
