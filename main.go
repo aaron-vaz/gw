@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -10,7 +9,7 @@ import (
 
 // default gradle values
 const defaultGradle = "gradle"
-const defaultGradlew = "gredlew"
+const defaultGradlew = "gradlew"
 const defaultGradleBuildFile = "build.gradle"
 
 func main() {
@@ -21,18 +20,19 @@ func main() {
 	if buildFile != "" {
 		os.Chdir(filepath.Dir(buildFile))
 	} else {
-		fmt.Printf("Cannot find gradle build file %s in the project", buildFile)
+		log.Fatalln("Cannot find gradle build file %s in the project", buildFile)
 	}
 
-	fmt.Printf("Using %s to run build file %s", gradleBinary, buildFile)
-	out, err := exec.Command(gradleBinary, buildArgs...).Output()
+	log.Printf("Using %s to run build file %s \n", gradleBinary, buildFile)
+	cmd := exec.Command(gradleBinary, buildArgs[1:]...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	// run the command
+	err := cmd.Run()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		log.Fatalln(err)
 	}
-
-	// prints the output from the gradle command to standard out
-	fmt.Fprintln(os.Stdout, out)
 }
 
 // selectGradleBinary find which gradle binary to use for the project
@@ -43,8 +43,7 @@ func selectGradleBinary() string {
 		return foundGradlew
 	}
 
-	log.Printf("\nNo %s set up for this project \n", defaultGradlew)
-	log.Println("please refer to http://gradle.org/docs/current/userguide/gradle_wrapper.html to set it up")
+	log.Printf("No %s set up for this project \nplease refer to http://gradle.org/docs/current/userguide/gradle_wrapper.html to set it up", defaultGradlew)
 
 	// if gradlew is not found revert to using the gradle binary
 	foundGradle, err := exec.LookPath(defaultGradle)
