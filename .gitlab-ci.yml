@@ -1,3 +1,5 @@
+image: golang:latest
+
 stages:
   - install-environment
   - build
