@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 )
 
 // default gradle values
@@ -19,7 +20,7 @@ func main() {
 	if buildFile != "" {
 		os.Chdir(filepath.Dir(buildFile))
 	} else {
-		log.Fatalln("Cannot find gradle build file %s in the project", buildFile)
+		log.Fatalf("Cannot find gradle build file %s in the project", defaultGradleBuildFile)
 	}
 
 	log.Printf("Using %s to run build file %s \n", gradleBinary, buildFile)
@@ -60,22 +61,38 @@ func selectGradleBinary() string {
 func findFile(file string, dir string) string {
 	var result string
 
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	root := findRootVolume(cwd)
+
 	// if no dir value is supplied default to the current working directory
 	if dir == "" {
-		var err error
-		dir, err = os.Getwd()
-
-		if err != nil {
-			log.Fatal(err)
-		}
+		dir = cwd
 	}
 
-	result = filepath.Join(dir, file)
-	if dir != "/" {
-		if _, err := os.Stat(result); os.IsNotExist(err) {
-			result = ""
-			findFile(file, filepath.Dir(dir))
+	// traverse up the directory structure looking for the file
+	// stops when the file is found or when the root directory has been reached
+	for dir != root {
+		result = filepath.Join(dir, file)
+		if _, err := os.Stat(result); err == nil {
+			return result
+		}
+		dir = filepath.Dir(dir)
+	}
+	return ""
+}
+
+// findRootVolume find the root volume of the path supplied using filepath.VolumeName
+// if filepath.VolumeName returns an empty string (on most systems) assume it is unix based and return /
+func findRootVolume(path string) string {
+	rootVolume := filepath.VolumeName(path)
+	if rootVolume == "" {
+		if runtime.GOOS != "windows" {
+			return "/"
 		}
 	}
-	return result
+	return rootVolume
 }
