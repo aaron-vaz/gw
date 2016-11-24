@@ -2,7 +2,7 @@ image: golang:alpine
 stages:
   - build
   - test
-build-my-project:
+build:
   stage: build
   script:
     - apk add --update git
@@ -11,10 +11,10 @@ build-my-project:
     - gox --os="darwin linux windows" --arch="amd64"
     - mv gw_* binaries
   artifacts:
-    name: "${CI_BUILD_NAME}_${CI_BUILD_REF_NAME}"
+    name: "${CI_PROJECT_NAME}_${CI_BUILD_REF_NAME}"
     paths:
      - binaries/
-test-my-project:
+test:
   stage: test
   script:
     - go test -v
