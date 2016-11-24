@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -24,6 +25,7 @@ func main() {
 	}
 
 	log.Printf("Using %s to run build file %s \n", gradleBinary, buildFile)
+	fmt.Println("")
 	cmd := exec.Command(gradleBinary, os.Args[1:]...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -43,7 +45,8 @@ func selectGradleBinary() string {
 		return foundGradlew
 	}
 
-	log.Printf("No %s set up for this project \nplease refer to http://gradle.org/docs/current/userguide/gradle_wrapper.html to set it up", defaultGradlew)
+	log.Printf("No %s set up for this project \nPlease refer to http://gradle.org/docs/current/userguide/gradle_wrapper.html to set it up", defaultGradlew)
+	fmt.Println("")
 
 	// if gradlew is not found revert to using the gradle binary
 	foundGradle, err := exec.LookPath(defaultGradle)
@@ -51,8 +54,8 @@ func selectGradleBinary() string {
 		return foundGradle
 	}
 
-	log.Printf("\n%s not found in your PATH: ", defaultGradle)
-	log.Println(os.Getenv("PATH"))
+	log.Printf("\n%s not found in your PATH: \n%s", defaultGradle, os.Getenv("PATH"))
+	fmt.Println("")
 
 	return ""
 }
@@ -90,9 +93,14 @@ func findFile(file string, dir string) string {
 func findRootVolume(path string) string {
 	rootVolume := filepath.VolumeName(path)
 	if rootVolume == "" {
-		if runtime.GOOS != "windows" {
+		if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
 			return "/"
 		}
+	} else {
+		if runtime.GOOS == "windows" {
+			return rootVolume + "\\"
+		}
 	}
+	log.Fatalln("No root volume found, exiting")
 	return rootVolume
 }
