@@ -2,14 +2,11 @@ image: golang:alpine
 stages:
   - build
   - test
-install-dependencies:
+build-my-project:
   stage: build
   script:
     - apk add --update git
     - go get -v github.com/mitchellh/gox
-build-my-project:
-  stage: build
-  script:
     - mkdir binaries
     - gox --os="darwin linux windows" --arch="amd64"
     - mv gw_* binaries
