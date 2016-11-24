@@ -1,12 +1,9 @@
 image: golang:alpine
-stages:
-  - install-environment
   - build
   - test
-install-go:
-  stage: install-environment
+install-dependencies:
+  stage: build
   script:
-    - go env
     - apk add --update git
     - go get -v github.com/mitchellh/gox
 build-my-project:
