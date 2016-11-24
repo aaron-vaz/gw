@@ -14,7 +14,7 @@ build-my-project:
     - mkdir binaries
     - gox --os="darwin linux windows" --arch="amd64"
     - mv gw_* binaries
-  artifact:
+  artifacts:
     name: "${CI_BUILD_NAME}_${CI_BUILD_REF_NAME}"
     paths:
      - binaries/
