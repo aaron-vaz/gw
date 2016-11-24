@@ -9,6 +9,11 @@ import (
 	"runtime"
 )
 
+var (
+	version   string
+	buildDate string
+)
+
 // default gradle values
 const defaultGradle = "gradle"
 const defaultGradlew = "gradlew"
@@ -89,7 +94,8 @@ func findFile(file string, dir string) string {
 }
 
 // findRootVolume find the root volume of the path supplied using filepath.VolumeName
-// if filepath.VolumeName returns an empty string (on most systems) assume it is unix based and return /
+// if filepath.VolumeName returns an empty string (on most systems) assume it is linux or darwin based and return /
+// if it is windows environement filepath.VolumeName will return the drive letter without slashes so the slashes are added before returning the value
 func findRootVolume(path string) string {
 	rootVolume := filepath.VolumeName(path)
 	if rootVolume == "" {
