@@ -1,4 +1,4 @@
-image: golang:latest
+image: golang:alpine
 stages:
   - install-environment
   - build
@@ -7,7 +7,6 @@ install-go:
   stage: install-environment
   script:
     - go env
-    - which go
 build-my-project:
   stage: build
   script:
