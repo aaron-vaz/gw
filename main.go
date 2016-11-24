@@ -54,7 +54,7 @@ func selectGradleBinary() string {
 		return foundGradle
 	}
 
-	log.Printf("\n%s not found in your PATH: \n%s", defaultGradle, os.Getenv("PATH"))
+	log.Printf("%s binary not found in your PATH: \n%s", defaultGradle, os.Getenv("PATH"))
 	fmt.Println("")
 
 	return ""
