@@ -7,7 +7,8 @@ install-go:
   stage: install-environment
   script:
     - go env
-    - go get github.com/mitchellh/gox
+    - apk add --update git
+    - go get -v github.com/mitchellh/gox
 build-my-project:
   stage: build
   script:
