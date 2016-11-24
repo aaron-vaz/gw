@@ -7,10 +7,17 @@ install-go:
   stage: install-environment
   script:
     - go env
+    - go get github.com/mitchellh/gox
 build-my-project:
   stage: build
   script:
-    - go build -v
+    - mkdir binaries
+    - gox --os="darwin linux windows" --arch="amd64"
+    - mv gw_* binaries
+  artifact:
+    name: "${CI_BUILD_NAME}_${CI_BUILD_REF_NAME}"
+    paths:
+     - binaries/
 test-my-project:
   stage: test
   script:
