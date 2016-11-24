@@ -1,0 +1,18 @@
+image: golang:latest
+stages:
+  - install-environment
+  - build
+  - test
+install-go:
+  stage: install-environment
+  script:
+    - go env
+    - which go
+build-my-project:
+  stage: build
+  script:
+    - go build -v
+test-my-project:
+  stage: test
+  script:
+    - go test -v
