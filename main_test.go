@@ -13,6 +13,7 @@ const projectLocation = "test_resources/gradle/project/"
 const subProjectLocation = projectLocation + "com.example.app/"
 const projectBuildFileLocation = projectLocation + defaultGradleBuildFile
 const subProjectBuildFileLocation = subProjectLocation + defaultGradleBuildFile
+const gradleLocation = "test_resources/gradle/binary" + defaultGradle
 const gradlewLocation = projectLocation + defaultGradlew
 const javaSrcDir = subProjectLocation + "src/main/java/"
 
@@ -31,6 +32,7 @@ func TestMain(t *testing.T) {
 }
 
 func TestSelectGradleBinary(t *testing.T) {
+	os.Setenv("PATH", os.Getenv("PATH")+";"+gradleLocation)
 	locations := []string{".", projectLocation}
 
 	for _, location := range locations {
