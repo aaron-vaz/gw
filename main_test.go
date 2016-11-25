@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -32,7 +33,9 @@ func TestMain(t *testing.T) {
 }
 
 func TestSelectGradleBinary(t *testing.T) {
-	os.Setenv("PATH", os.Getenv("PATH")+";"+gradleLocation)
+	absGradlePath, _ := filepath.Abs(gradleLocation)
+
+	os.Setenv("PATH", os.Getenv("PATH")+";"+absGradlePath)
 	locations := []string{".", projectLocation}
 
 	for _, location := range locations {
