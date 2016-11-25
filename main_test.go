@@ -35,7 +35,7 @@ func TestMain(t *testing.T) {
 func TestSelectGradleBinary(t *testing.T) {
 	absGradlePath, _ := filepath.Abs(gradleLocation)
 
-	os.Setenv("PATH", os.Getenv("PATH")+";"+absGradlePath)
+	os.Setenv("PATH", os.Getenv("PATH")+":"+absGradlePath)
 	locations := []string{".", projectLocation}
 
 	for _, location := range locations {
