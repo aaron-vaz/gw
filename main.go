@@ -9,11 +9,6 @@ import (
 	"runtime"
 )
 
-var (
-	version   string
-	buildDate string
-)
-
 // default gradle values
 const defaultGradle = "gradle"
 const defaultGradlew = "gradlew"
@@ -29,7 +24,7 @@ func main() {
 		log.Fatalf("Cannot find gradle build file %s in the project", defaultGradleBuildFile)
 	}
 
-	log.Printf("Using %s to run build file %s \n", gradleBinary, buildFile)
+	log.Printf("Using '%s' to run build file '%s' \n", gradleBinary, buildFile)
 	fmt.Println("")
 	cmd := exec.Command(gradleBinary, os.Args[1:]...)
 	cmd.Stdout = os.Stdout
