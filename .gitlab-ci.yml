@@ -17,4 +17,4 @@ build:
 test:
   stage: test
   script:
-    - go test -v
+    - go test -v -cover
