@@ -14,7 +14,7 @@ const projectLocation = "test_resources/gradle/project/"
 const subProjectLocation = projectLocation + "com.example.app/"
 const projectBuildFileLocation = projectLocation + defaultGradleBuildFile
 const subProjectBuildFileLocation = subProjectLocation + defaultGradleBuildFile
-const gradleLocation = "test_resources/gradle/binary/" + defaultGradle
+const gradleLocation = "test_resources/gradle/binary/"
 const gradlewLocation = projectLocation + defaultGradlew
 const javaSrcDir = subProjectLocation + "src/main/java/"
 
