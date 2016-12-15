@@ -19,6 +19,11 @@ const (
 
 func main() {
 	gradleBinary := selectGradleBinary()
+
+	if gradleBinary == "" {
+		os.Exit(1)
+	}
+
 	buildFile := selectGradleBuildFile()
 
 	log.Printf("Using '%s' to run build file '%s' \n", gradleBinary, buildFile)
@@ -54,7 +59,7 @@ func selectGradleBinary() string {
 		return foundGradle
 	}
 
-	log.Fatalln("%s binary not found in your PATH: \n%s", gradleBinary, os.Getenv("PATH"))
+	log.Printf("%s binary not found in your PATH: \n%s", gradleBinary, os.Getenv("PATH"))
 
 	return ""
 }

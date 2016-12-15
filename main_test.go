@@ -50,13 +50,22 @@ func TestMain(t *testing.T) {
 func TestSelectGradleBinary(t *testing.T) {
 	absGradlePath, _ := filepath.Abs(gradleLocation)
 
+	// test that error path before adding binary to path
+	os.Chdir("/tmp")
+	result := selectGradleBinary()
+
+	if result != "" {
+		t.Error("empty string should have been returned")
+	}
+
+	// check other paths
 	os.Setenv("PATH", os.Getenv("PATH")+":"+absGradlePath)
 	locations := []string{
 		groovyProjectLocation,
 		groovySubProjectLocation,
 		kotlinProjectLocation,
 		kotlinSubProjectLocation,
-		".",
+		"/tmp",
 	}
 
 	for _, location := range locations {
