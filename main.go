@@ -10,22 +10,22 @@ import (
 )
 
 // default gradle values
-const defaultGradle = "gradle"
-const defaultGradlew = "gradlew"
-const defaultGradleBuildFile = "build.gradle"
+const (
+	gradleBinary          = "gradle"
+	gradlewFile           = "gradlew"
+	gradleGroovyBuildFile = "build.gradle"
+	gradleKotlinBuildFile = "build.gradle.kts"
+)
 
 func main() {
-	buildFile := findFile(defaultGradleBuildFile, "")
 	gradleBinary := selectGradleBinary()
-
-	if buildFile != "" {
-		os.Chdir(filepath.Dir(buildFile))
-	} else {
-		log.Fatalf("Cannot find gradle build file %s in the project", defaultGradleBuildFile)
-	}
+	buildFile := selectGradleBuildFile()
 
 	log.Printf("Using '%s' to run build file '%s' \n", gradleBinary, buildFile)
 	fmt.Println("")
+
+	os.Chdir(filepath.Dir(buildFile))
+
 	cmd := exec.Command(gradleBinary, os.Args[1:]...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -40,24 +40,45 @@ func main() {
 // selectGradleBinary find which gradle binary to use for the project
 func selectGradleBinary() string {
 	// look for project gradlew file
-	foundGradlew := findFile(defaultGradlew, "")
+	foundGradlew := findFile(gradlewFile, "")
 	if foundGradlew != "" {
 		return foundGradlew
 	}
 
-	log.Printf("No %s set up for this project \nPlease refer to http://gradle.org/docs/current/userguide/gradle_wrapper.html to set it up", defaultGradlew)
+	log.Printf("No %s set up for this project \nPlease refer to http://gradle.org/docs/current/userguide/gradle_wrapper.html to set it up", gradlewFile)
 	fmt.Println("")
 
 	// if gradlew is not found revert to using the gradle binary
-	foundGradle, err := exec.LookPath(defaultGradle)
+	foundGradle, err := exec.LookPath(gradleBinary)
 	if err == nil {
 		return foundGradle
 	}
 
-	log.Printf("%s binary not found in your PATH: \n%s", defaultGradle, os.Getenv("PATH"))
-	fmt.Println("")
+	log.Fatalln("%s binary not found in your PATH: \n%s", gradleBinary, os.Getenv("PATH"))
 
 	return ""
+}
+
+// getGradleBuildFileLocation first checks for a groovy build file in the working directory
+// if the groovy build file is not found it next checks for a kotlin build file
+// if both checks find nothing we return the current working directory and let gradle figure out whether the cwd is a gradle project
+func selectGradleBuildFile() string {
+	groovyBuildFile := findFile(gradleGroovyBuildFile, "")
+	kotlinBuildFile := findFile(gradleKotlinBuildFile, "")
+
+	// check if the goovy build file was found
+	if groovyBuildFile != "" {
+		return groovyBuildFile
+
+		// if the groovy build file was not found look for a kotlin one
+	} else if kotlinBuildFile != "" {
+		return kotlinBuildFile
+
+		// if both dont exist we assume that the project is not a gradle project
+	} else {
+		log.Printf("Cannot find gradle build file %s or %s in the project", gradleGroovyBuildFile, gradleKotlinBuildFile)
+		return "."
+	}
 }
 
 // findFile recurcively searches upwards for a file staring from a directory
@@ -69,6 +90,7 @@ func findFile(file string, dir string) string {
 		log.Fatal(err)
 	}
 
+	// find filesystem root
 	root := findRootVolume(cwd)
 
 	// if no dir value is supplied default to the current working directory

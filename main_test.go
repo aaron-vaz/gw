@@ -10,13 +10,28 @@ import (
 // get cwd to return back to after a test is run
 var cwd = getCurrentWorkingDirectory()
 
-const projectLocation = "test_resources/gradle/project/"
-const subProjectLocation = projectLocation + "com.example.app/"
-const projectBuildFileLocation = projectLocation + defaultGradleBuildFile
-const subProjectBuildFileLocation = subProjectLocation + defaultGradleBuildFile
-const gradleLocation = "test_resources/gradle/binary/"
-const gradlewLocation = projectLocation + defaultGradlew
-const javaSrcDir = subProjectLocation + "src/main/java/"
+const (
+	groovyProjectLocation    = "test_resources/gradle/groovy_project/"
+	groovySubProjectLocation = groovyProjectLocation + "com.example.app/"
+
+	kotlinProjectLocation    = "test_resources/gradle/kotlin_project/"
+	kotlinSubProjectLocation = kotlinProjectLocation + "com.example.app/"
+
+	defaultBuildFile       = "build.gradle"
+	defaultBuildFileKotlin = "build.gradle.kts"
+	defaultGradlewFile     = "gradlew"
+
+	groovyProjectBuildFileLocation    = groovyProjectLocation + defaultBuildFile
+	groovySubProjectBuildFileLocation = groovySubProjectLocation + defaultBuildFile
+
+	kotlinProjectBuildFileKotlinLocation    = kotlinProjectLocation + defaultBuildFileKotlin
+	kotlinSubProjectBuildFileKotlinLocation = kotlinSubProjectLocation + defaultBuildFileKotlin
+
+	gradleLocation  = "test_resources/gradle/binary/"
+	gradlewLocation = groovyProjectLocation + defaultGradlewFile
+
+	javaSrcDir = groovySubProjectLocation + "src/main/java/"
+)
 
 type senarios struct {
 	file     string
@@ -25,18 +40,24 @@ type senarios struct {
 }
 
 func TestMain(t *testing.T) {
-	os.Chdir(projectLocation)
+	os.Chdir(groovyProjectLocation)
 	main()
 
 	// change the current working directory back so it doesnt effect the other tests
-	os.Chdir(cwd)
+	defer os.Chdir(cwd)
 }
 
 func TestSelectGradleBinary(t *testing.T) {
 	absGradlePath, _ := filepath.Abs(gradleLocation)
 
 	os.Setenv("PATH", os.Getenv("PATH")+":"+absGradlePath)
-	locations := []string{".", projectLocation}
+	locations := []string{
+		groovyProjectLocation,
+		groovySubProjectLocation,
+		kotlinProjectLocation,
+		kotlinSubProjectLocation,
+		".",
+	}
 
 	for _, location := range locations {
 		os.Chdir(location)
@@ -48,32 +69,84 @@ func TestSelectGradleBinary(t *testing.T) {
 	}
 
 	// change the current working directory back so it doesnt effect the other tests
-	os.Chdir(cwd)
+	defer os.Chdir(cwd)
+}
+
+func TestSelectGradleBuildFile(t *testing.T) {
+	tests := []senarios{
+		// cd to groovy project and find default build file
+		{
+			location: getAbsPath(groovyProjectLocation),
+			expected: getAbsPath(groovyProjectBuildFileLocation),
+		},
+		// cd to kotlin project and find default build file
+		{
+			location: getAbsPath(kotlinProjectLocation),
+			expected: getAbsPath(kotlinProjectBuildFileKotlinLocation),
+		},
+		// cd to groovy sub project and find default build file
+		{
+			location: getAbsPath(groovySubProjectLocation),
+			expected: getAbsPath(groovySubProjectBuildFileLocation),
+		},
+		// cd to kotlin sub project and find default build file
+		{
+			location: getAbsPath(kotlinSubProjectLocation),
+			expected: getAbsPath(kotlinSubProjectBuildFileKotlinLocation),
+		},
+		// if default build files are not found check that cwd is returned
+		{
+			location: "/tmp",
+			expected: ".",
+		},
+	}
+
+	for _, test := range tests {
+		os.Chdir(test.location)
+		result := selectGradleBuildFile()
+		if result != test.expected {
+			t.Errorf("actual: %s, expected: %s", result, test.expected)
+		}
+	}
+
+	defer os.Chdir(cwd)
 }
 
 func TestFindFile(t *testing.T) {
 	tests := []senarios{
 		// find project default build file
-		senarios{
-			file:     defaultGradleBuildFile,
-			location: projectLocation,
-			expected: projectBuildFileLocation,
+		{
+			file:     defaultBuildFile,
+			location: groovyProjectLocation,
+			expected: groovyProjectBuildFileLocation,
 		},
-		// find sub project default build file
-		senarios{
-			file:     defaultGradleBuildFile,
-			location: subProjectLocation,
-			expected: subProjectBuildFileLocation,
+		// find project default kotlin build file
+		{
+			file:     defaultBuildFileKotlin,
+			location: kotlinProjectLocation,
+			expected: kotlinProjectBuildFileKotlinLocation,
+		},
+		// find groovy sub project default build file
+		{
+			file:     defaultBuildFile,
+			location: groovySubProjectLocation,
+			expected: groovySubProjectBuildFileLocation,
+		},
+		// find kotlin sub project default build file
+		{
+			file:     defaultBuildFileKotlin,
+			location: kotlinSubProjectLocation,
+			expected: kotlinSubProjectBuildFileKotlinLocation,
 		},
 		// find project gradlew
-		senarios{
-			file:     defaultGradlew,
-			location: projectLocation,
+		{
+			file:     defaultGradlewFile,
+			location: groovyProjectLocation,
 			expected: gradlewLocation,
 		},
 		// find project gradlew from sub directory
-		senarios{
-			file:     defaultGradlew,
+		{
+			file:     defaultGradlewFile,
 			location: javaSrcDir,
 			expected: gradlewLocation,
 		},
@@ -82,7 +155,6 @@ func TestFindFile(t *testing.T) {
 	for _, test := range tests {
 		result := findFile(test.file, test.location)
 		if result != test.expected {
-			t.Error("build.gradle was not found")
 			t.Errorf("actual: %s, expected: %s", result, test.expected)
 		}
 	}
@@ -101,4 +173,12 @@ func getCurrentWorkingDirectory() string {
 		fmt.Println(err)
 	}
 	return cwd
+}
+
+func getAbsPath(file string) string {
+	path, err := filepath.Abs(file)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return path
 }
