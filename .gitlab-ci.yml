@@ -6,6 +6,7 @@ build:
   stage: build
   script:
     - apk add --update git
+    - go version
     - go get -v github.com/mitchellh/gox
     - mkdir binaries
     - gox -ldflags "-s -w" -verbose
