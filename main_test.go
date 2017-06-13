@@ -33,7 +33,7 @@ const (
 	javaSrcDir = groovySubProjectLocation + "src/main/java/"
 )
 
-type senarios struct {
+type scenarios struct {
 	file     string
 	location string
 	expected string
@@ -82,7 +82,7 @@ func TestSelectGradleBinary(t *testing.T) {
 }
 
 func TestSelectGradleBuildFile(t *testing.T) {
-	tests := []senarios{
+	tests := []scenarios{
 		// cd to groovy project and find default build file
 		{
 			location: getAbsPath(groovyProjectLocation),
@@ -122,7 +122,7 @@ func TestSelectGradleBuildFile(t *testing.T) {
 }
 
 func TestFindFile(t *testing.T) {
-	tests := []senarios{
+	tests := []scenarios{
 		// find project default build file
 		{
 			file:     defaultBuildFile,

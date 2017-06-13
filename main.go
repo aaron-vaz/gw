@@ -86,7 +86,7 @@ func selectGradleBuildFile() string {
 	}
 }
 
-// findFile recurcively searches upwards for a file staring from a directory
+// findFile recursively searches upwards for a file staring from a directory
 func findFile(file string, dir string) string {
 	var result string
 
