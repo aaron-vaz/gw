@@ -9,6 +9,12 @@ import (
 	"runtime"
 )
 
+// Build Flags
+var (
+	VERSION = "0.0.0"
+	COMMIT  = "dev"
+)
+
 // default gradle values
 const (
 	gradleBinary          = "gradle"
@@ -29,17 +35,16 @@ func main() {
 	log.Printf("Using '%s' to run build file '%s' \n", gradleBinary, buildFile)
 	fmt.Println("")
 
-	os.Chdir(filepath.Dir(buildFile))
+	err := os.Chdir(filepath.Dir(buildFile))
+	checkError(err)
 
 	cmd := exec.Command(gradleBinary, os.Args[1:]...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
 	// run the command
-	err := cmd.Run()
-	if err != nil {
-		log.Fatalln(err)
-	}
+	err = cmd.Run()
+	checkError(err)
 }
 
 // selectGradleBinary find which gradle binary to use for the project
@@ -71,7 +76,7 @@ func selectGradleBuildFile() string {
 	groovyBuildFile := findFile(gradleGroovyBuildFile, "")
 	kotlinBuildFile := findFile(gradleKotlinBuildFile, "")
 
-	// check if the goovy build file was found
+	// check if the groovy build file was found
 	if groovyBuildFile != "" {
 		return groovyBuildFile
 
@@ -91,9 +96,7 @@ func findFile(file string, dir string) string {
 	var result string
 
 	cwd, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-	}
+	checkError(err)
 
 	// find filesystem root
 	root := findRootVolume(cwd)
@@ -117,7 +120,7 @@ func findFile(file string, dir string) string {
 
 // findRootVolume find the root volume of the path supplied using filepath.VolumeName
 // if filepath.VolumeName returns an empty string (on most systems) assume it is linux or darwin based and return /
-// if it is windows environement filepath.VolumeName will return the drive letter without slashes so the slashes are added before returning the value
+// if it is in the windows environment filepath.VolumeName will return the drive letter without slashes so the slashes are added before returning the value
 func findRootVolume(path string) string {
 	rootVolume := filepath.VolumeName(path)
 	if rootVolume == "" {
@@ -131,4 +134,11 @@ func findRootVolume(path string) string {
 	}
 	log.Fatalln("No root volume found, exiting")
 	return rootVolume
+}
+
+// checkError checks the err variable passed in a exit the program if an error is found
+func checkError(err error) {
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
