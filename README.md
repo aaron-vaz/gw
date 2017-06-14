@@ -14,11 +14,12 @@ Originally the plan was to write this in powershell or batch as the main goal wa
 also build binaries for practically all environments and architectures and so it was the perfect language for what I was trying to do.
 
 ## Installation
+## Pre-built Binaries
+There are pre-built [binaries](https://github.com/aaron-vaz/gw/releases/latest) available,
+simply download the binary for your system rename and place in a location on the `$PATH`
+
 ### Go get
-Currently the only way to install go-gdub is to use golang's inbuilt `go get`
+Another way to install go-gdub is to use golang's inbuilt `go get`
 > go get github.com/aaron-vaz/gw
 
 Though this does require you to have `go` installed and a valid `$GOPATH` environment variable and `$GOPATH/bin` added to your `$PATH`. please refer to the [go docs](https://golang.org/doc/install) for help
-
-## Pre-built Binaries
-Coming Soon!! Once I figure out Travis/Github releases :smile:
