@@ -1,5 +1,14 @@
 language: go
 go:
- - 1.8.x
+- 1.8.x
 install:
- - make all
+- make all
+deploy:
+  provider: releases
+  api_key:
+    secure: C0hbw4dImOCBeBQhgFTf90O8z3AWRMbKJFtL/Grj6+NQsNrBvg5RFvfcmx0OqwY4216lPjkNd9jKVS5era/cO+l5jSK76459IFv3oMr9GeA61mHHGdTfZTcOhSGSs9zStypjGKy2NI3lz0G7Kabpk/fb2/eD5i/NAjt0XQY2CPM+UAcsrxnzkK4zgANkDx/ic/KiF8ueMirs6qB/2jLhFD1wnYpRMRaH6lV5zDXlhMrVOUyL0SVZqklJethaQkqtP/k458CvFOGBfBwrHLaasNMoAb0S9IN3NPPut7KBh0oh/S+EvaaVNYJ6z+Sk+Y5s2dGEBXlkdpQf+VtGBu4BDM8mJkonwtaglXn4owrWnL136LmqkJ8fhMA0/PbxmmGAzaV3kmC7b1p/xttOrgeciRdpbto9t9osf6YFkajCtRHlE50ziHWkwN9NMnH5UomLzFL4k38ZizP/j3j8oao3R2/0NslGG0A17fB6/FnfOUh6xpDvq+ZiNbJfoOMVBGmDl8IJSUmMX5tyexuH2GiEL087blAzzHcUUaShZfAqtB1Q6qWVOeCWUO1/taiWVF02J0nEVABtsFERS3jbM2QYMw5SaR9jYISUHepKB8nuoHWPvG5zvCheNqKEEJMdycmfNZ53JsBOCa80Vr6e+5DSyOT6xuWYcTn9kHBKFTcNJHs=
+  file_glob: true
+  file: build/binaries/gw_*
+  skip_cleanup: true
+  on:
+    tags: true
