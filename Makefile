@@ -1,4 +1,4 @@
-VERSION?=$(shell git describe --tags)
+VERSION?="1.0.0"
 COMMIT:=$(shell git rev-parse HEAD)
 
 BUILD_DIR:=$(shell pwd)/build
@@ -13,6 +13,9 @@ export PATH:=$(PATH):${GOPATH}/bin
 LDFLAGS:=-ldflags "-s -w -X main.VERSION=${VERSION} -X main.COMMIT=${COMMIT}"
 
 # Build the project
+ci: all
+	echo ${VERSION} > ${BUILD_DIR}/version.txt 
+
 all: clean setup_workspace get_dependencies test build
 
 clean:
