@@ -26,7 +26,7 @@ get_dependencies:
 
 build:
 	cd ${BINARY_DIR}; \
-	gox -verbose ${LDFLAGS} ../../ ; \
+	gox -verbose ${LDFLAGS} -os="windows linux darwin" -arch="amd64" -output="gw_{{.OS}}_{{.Arch}}" ../../ ; \
 	cd - >/dev/null
 
 test:
