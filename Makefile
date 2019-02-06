@@ -1,39 +1,27 @@
-VERSION?="1.0.0"
-COMMIT:=$(shell git rev-parse HEAD)
+REPO:=/go/src/github.com/aaron-vaz/gw
 
-BUILD_DIR:=$(shell pwd)/build
+BUILD_DIR:=${PWD}/build
 BINARY_DIR:=${BUILD_DIR}/binaries
-TEST_REPORT_DIR=${BUILD_DIR}/reports
-
-# set environment variables
-export GOPATH:=${BUILD_DIR}/gopath
-export PATH:=$(PATH):${GOPATH}/bin
 
 # Setup the -ldflags option for go build here, interpolate the variable values
-LDFLAGS:=-ldflags "-s -w -X main.VERSION=${VERSION} -X main.COMMIT=${COMMIT}"
-
-# Build the project
-ci: all
-	echo ${VERSION} > ${BUILD_DIR}/version.txt 
-
-all: clean setup_workspace get_dependencies test build
+LDFLAGS:=-ldflags "-s -w"
 
 clean:
-	-rm -rf ${BUILD_DIR}
+	@-rm -rf ${BUILD_DIR}
 
 setup_workspace:
-	mkdir -p ${BUILD_DIR} ${TEST_REPORT_DIR} ${BINARY_DIR}
+	@mkdir -p ${BUILD_DIR} ${BINARY_DIR}
 
 get_dependencies:
-	go get github.com/mitchellh/gox github.com/tebeka/go2xunit
-
-build:
-	cd ${BINARY_DIR}; \
-	gox -verbose ${LDFLAGS} -os="windows linux darwin" -arch="amd64" -output="gw_{{.OS}}_{{.Arch}}" ../../ ; \
-	cd - >/dev/null
+	@go get github.com/mitchellh/gox
 
 test:
-	go test -v --cover | go2xunit -output ${TEST_REPORT_DIR}/tests.xml ; \
-	cd - >/dev/null
+	@go test -cover ./cmd/gw
 
-.PHONY: build test clean setup_workspace get_dependencies
+build: setup_workspace get_dependencies test
+	@gox -verbose ${LDFLAGS} -os="windows linux darwin" -arch="amd64" -output="${BINARY_DIR}/gw_{{.OS}}_{{.Arch}}" ./cmd/gw
+
+docker:
+	@docker run --rm -v ${PWD}:${REPO} -w=${REPO} -e "GO111MODULE=on" golang make build
+
+.PHONY: docker build test clean setup_workspace get_dependencies

@@ -1,0 +1,6 @@
+github.com/aaron-vaz/golang-utils v0.0.0-20190206191744-c01c55feee04 h1:fYUGH4T2o/bsndl3d0Az7IEV4z2Z1/lI2rWx301sSNA=
+github.com/aaron-vaz/golang-utils v0.0.0-20190206191744-c01c55feee04/go.mod h1:6jCjmbnApyJHoMfzewIjtBuyO1RkkulFGQP2NervfBA=
+github.com/mitchellh/gox v0.4.0 h1:lfGJxY7ToLJQjHHwi0EX6uYBdK78egf954SQl13PQJc=
+github.com/mitchellh/gox v0.4.0/go.mod h1:Sd9lOJ0+aimLBi73mGofS1ycjY8lL3uZM3JPS42BGNg=
+github.com/mitchellh/iochan v1.0.0 h1:C+X3KsSTLFVBr/tK1eYN/vs4rJcvsiLU338UhYPJWeY=
+github.com/mitchellh/iochan v1.0.0/go.mod h1:JwYml1nuB7xOzsp52dPpHFffvOCDupsG0QubkSMEySY=

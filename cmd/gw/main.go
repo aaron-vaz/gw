@@ -6,13 +6,10 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
-)
 
-// Build Flags
-var (
-	VERSION = "0.0.0"
-	COMMIT  = "dev"
+	"github.com/aaron-vaz/golang-utils/pkg/fsutil"
+
+	"github.com/aaron-vaz/golang-utils/pkg/errorutil"
 )
 
 // default gradle values
@@ -36,7 +33,7 @@ func main() {
 	fmt.Println("")
 
 	err := os.Chdir(filepath.Dir(buildFile))
-	checkError(err)
+	errorutil.ErrCheck(err, true)
 
 	cmd := exec.Command(gradleBinary, os.Args[1:]...)
 	cmd.Stdout = os.Stdout
@@ -44,13 +41,13 @@ func main() {
 
 	// run the command
 	err = cmd.Run()
-	checkError(err)
+	errorutil.ErrCheck(err, true)
 }
 
 // selectGradleBinary find which gradle binary to use for the project
 func selectGradleBinary() string {
 	// look for project gradlew file
-	foundGradlew := findFile(gradlewFile, "")
+	foundGradlew := fsutil.FindFile(gradlewFile, "")
 	if foundGradlew != "" {
 		return foundGradlew
 	}
@@ -73,8 +70,8 @@ func selectGradleBinary() string {
 // if the groovy build file is not found it next checks for a kotlin build file
 // if both checks find nothing we return the current working directory and let gradle figure out whether the cwd is a gradle project
 func selectGradleBuildFile() string {
-	groovyBuildFile := findFile(gradleGroovyBuildFile, "")
-	kotlinBuildFile := findFile(gradleKotlinBuildFile, "")
+	groovyBuildFile := fsutil.FindFile(gradleGroovyBuildFile, "")
+	kotlinBuildFile := fsutil.FindFile(gradleKotlinBuildFile, "")
 
 	// check if the groovy build file was found
 	if groovyBuildFile != "" {
@@ -88,57 +85,5 @@ func selectGradleBuildFile() string {
 	} else {
 		log.Printf("Cannot find gradle build file %s or %s in the project", gradleGroovyBuildFile, gradleKotlinBuildFile)
 		return "."
-	}
-}
-
-// findFile recursively searches upwards for a file staring from a directory
-func findFile(file string, dir string) string {
-	var result string
-
-	cwd, err := os.Getwd()
-	checkError(err)
-
-	// find filesystem root
-	root := findRootVolume(cwd)
-
-	// if no dir value is supplied default to the current working directory
-	if dir == "" {
-		dir = cwd
-	}
-
-	// traverse up the directory structure looking for the file
-	// stops when the file is found or when the root directory has been reached
-	for dir != root {
-		result = filepath.Join(dir, file)
-		if _, err := os.Stat(result); err == nil {
-			return result
-		}
-		dir = filepath.Dir(dir)
-	}
-	return ""
-}
-
-// findRootVolume find the root volume of the path supplied using filepath.VolumeName
-// if filepath.VolumeName returns an empty string (on most systems) assume it is linux or darwin based and return /
-// if it is in the windows environment filepath.VolumeName will return the drive letter without slashes so the slashes are added before returning the value
-func findRootVolume(path string) string {
-	rootVolume := filepath.VolumeName(path)
-	if rootVolume == "" {
-		if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
-			return "/"
-		}
-	} else {
-		if runtime.GOOS == "windows" {
-			return rootVolume + "\\"
-		}
-	}
-	log.Fatalln("No root volume found, exiting")
-	return rootVolume
-}
-
-// checkError checks the err variable passed in a exit the program if an error is found
-func checkError(err error) {
-	if err != nil {
-		log.Fatalln(err)
 	}
 }

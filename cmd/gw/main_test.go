@@ -1,10 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/aaron-vaz/golang-utils/pkg/errorutil"
 )
 
 // get cwd to return back to after a test is run
@@ -19,7 +20,6 @@ const (
 
 	defaultBuildFile       = "build.gradle"
 	defaultBuildFileKotlin = "build.gradle.kts"
-	defaultGradlewFile     = "gradlew"
 
 	groovyProjectBuildFileLocation    = groovyProjectLocation + defaultBuildFile
 	groovySubProjectBuildFileLocation = groovySubProjectLocation + defaultBuildFile
@@ -27,36 +27,36 @@ const (
 	kotlinProjectBuildFileKotlinLocation    = kotlinProjectLocation + defaultBuildFileKotlin
 	kotlinSubProjectBuildFileKotlinLocation = kotlinSubProjectLocation + defaultBuildFileKotlin
 
-	gradleLocation  = "test_resources/gradle/binary/"
-	gradlewLocation = groovyProjectLocation + defaultGradlewFile
-
-	javaSrcDir = groovySubProjectLocation + "src/main/java/"
+	gradleLocation = "test_resources/gradle/binary/"
 )
 
-type scenarios struct {
-	file     string
-	location string
-	expected string
-}
-
-func TestMain(t *testing.T) {
+func Test_Main(t *testing.T) {
 	os.Chdir(groovyProjectLocation)
-	main()
 
-	// change the current working directory back so it doesnt effect the other tests
+	// change the current working directory back so it doesn't effect the other tests
 	defer os.Chdir(cwd)
+
+	main()
 }
 
-func TestSelectGradleBinary(t *testing.T) {
+func Test_SelectGradleBinary(t *testing.T) {
 	absGradlePath, _ := filepath.Abs(gradleLocation)
+
+	path := os.Getenv("PATH")
+
+	// clean PATH
+	os.Setenv("PATH", "")
 
 	// test that error path before adding binary to path
 	os.Chdir("/tmp")
 	result := selectGradleBinary()
 
 	if result != "" {
-		t.Error("empty string should have been returned")
+		t.Errorf("empty string should have been returned, got = %s", result)
 	}
+
+	// set path back
+	os.Setenv("PATH", path)
 
 	// check other paths
 	os.Setenv("PATH", os.Getenv("PATH")+":"+absGradlePath)
@@ -77,11 +77,16 @@ func TestSelectGradleBinary(t *testing.T) {
 		}
 	}
 
-	// change the current working directory back so it doesnt effect the other tests
+	// change the current working directory back so it doesn't effect the other tests
 	defer os.Chdir(cwd)
 }
 
-func TestSelectGradleBuildFile(t *testing.T) {
+func Test_SelectGradleBuildFile(t *testing.T) {
+	type scenarios struct {
+		location string
+		expected string
+	}
+
 	tests := []scenarios{
 		// cd to groovy project and find default build file
 		{
@@ -121,73 +126,14 @@ func TestSelectGradleBuildFile(t *testing.T) {
 	defer os.Chdir(cwd)
 }
 
-func TestFindFile(t *testing.T) {
-	tests := []scenarios{
-		// find project default build file
-		{
-			file:     defaultBuildFile,
-			location: groovyProjectLocation,
-			expected: groovyProjectBuildFileLocation,
-		},
-		// find project default kotlin build file
-		{
-			file:     defaultBuildFileKotlin,
-			location: kotlinProjectLocation,
-			expected: kotlinProjectBuildFileKotlinLocation,
-		},
-		// find groovy sub project default build file
-		{
-			file:     defaultBuildFile,
-			location: groovySubProjectLocation,
-			expected: groovySubProjectBuildFileLocation,
-		},
-		// find kotlin sub project default build file
-		{
-			file:     defaultBuildFileKotlin,
-			location: kotlinSubProjectLocation,
-			expected: kotlinSubProjectBuildFileKotlinLocation,
-		},
-		// find project gradlew
-		{
-			file:     defaultGradlewFile,
-			location: groovyProjectLocation,
-			expected: gradlewLocation,
-		},
-		// find project gradlew from sub directory
-		{
-			file:     defaultGradlewFile,
-			location: javaSrcDir,
-			expected: gradlewLocation,
-		},
-	}
-
-	for _, test := range tests {
-		result := findFile(test.file, test.location)
-		if result != test.expected {
-			t.Errorf("actual: %s, expected: %s", result, test.expected)
-		}
-	}
-}
-
-func TestFindRootVolume(t *testing.T) {
-	result := findRootVolume("/tmp/something")
-	if result != "/" {
-		t.Error("Didnt find the correct root volume")
-	}
-}
-
 func getCurrentWorkingDirectory() string {
 	cwd, err := os.Getwd()
-	if err != nil {
-		fmt.Println(err)
-	}
+	errorutil.ErrCheck(err, false)
 	return cwd
 }
 
 func getAbsPath(file string) string {
 	path, err := filepath.Abs(file)
-	if err != nil {
-		fmt.Println(err)
-	}
+	errorutil.ErrCheck(err, false)
 	return path
 }
