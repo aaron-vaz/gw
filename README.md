@@ -1,4 +1,4 @@
-# Go gdub
+# Go gdub ![](https://api.travis-ci.org/aaron-vaz/gw.svg?branch=master)
 Based on the original [gdub](https://github.com/dougborg/gdub), this project is a golang gradle wrapper wrapper :smile:. 
 As the name suggests it is a wrapper for the gradle wrapper which allows you to execute gradle tasks from anywhere in your project
 
@@ -20,6 +20,6 @@ simply download the binary for your system rename and place in a location on the
 
 ### Go get
 Another way to install go-gdub is to use golang's inbuilt `go get`
-> go get github.com/aaron-vaz/gw
+> go get github.com/aaron-vaz/gw/cmd/gw
 
 Though this does require you to have `go` installed and a valid `$GOPATH` environment variable and `$GOPATH/bin` added to your `$PATH`. please refer to the [go docs](https://golang.org/doc/install) for help
