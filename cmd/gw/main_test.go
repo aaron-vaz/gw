@@ -18,112 +18,181 @@ const (
 	kotlinProjectLocation    = "test_resources/gradle/kotlin_project/"
 	kotlinSubProjectLocation = kotlinProjectLocation + "com.example.app/"
 
-	defaultBuildFile       = "build.gradle"
-	defaultBuildFileKotlin = "build.gradle.kts"
+	groovyProjectBuildFileLocation    = groovyProjectLocation + gradleGroovyBuildFile
+	groovySubProjectBuildFileLocation = groovySubProjectLocation + gradleGroovyBuildFile
 
-	groovyProjectBuildFileLocation    = groovyProjectLocation + defaultBuildFile
-	groovySubProjectBuildFileLocation = groovySubProjectLocation + defaultBuildFile
-
-	kotlinProjectBuildFileKotlinLocation    = kotlinProjectLocation + defaultBuildFileKotlin
-	kotlinSubProjectBuildFileKotlinLocation = kotlinSubProjectLocation + defaultBuildFileKotlin
+	kotlinProjectBuildFileKotlinLocation    = kotlinProjectLocation + gradleKotlinBuildFile
+	kotlinSubProjectBuildFileKotlinLocation = kotlinSubProjectLocation + gradleKotlinBuildFile
 
 	gradleLocation = "test_resources/gradle/binary/"
 )
 
-func Test_Main(t *testing.T) {
-	os.Chdir(groovyProjectLocation)
+func TestSelectGradleBuildFile(t *testing.T) {
+	tests := []struct {
+		name     string
+		location string
+		want     string
+	}{
+		{
+			name:     "Test that the groovy build file is returned when launched from the root of the groovy project",
+			location: getAbsPath(groovyProjectLocation),
+			want:     getAbsPath(groovyProjectBuildFileLocation),
+		},
 
-	// change the current working directory back so it doesn't effect the other tests
+		{
+			name:     "Test that the kotlin build file is returned when launched from the root of the kotlin project",
+			location: getAbsPath(kotlinProjectLocation),
+			want:     getAbsPath(kotlinProjectBuildFileKotlinLocation),
+		},
+
+		{
+			name:     "Test that the groovy build file from the sub project is returned when launched from the sub project",
+			location: getAbsPath(groovySubProjectLocation),
+			want:     getAbsPath(groovySubProjectBuildFileLocation),
+		},
+
+		{
+			name:     "Test that the kotlin build file from the sub project is returned when launched from the sub project",
+			location: getAbsPath(kotlinSubProjectLocation),
+			want:     getAbsPath(kotlinSubProjectBuildFileKotlinLocation),
+		},
+
+		{
+			name:     "Test that the kotlin build file from the sub project is returned when launched from java dir",
+			location: getAbsPath(kotlinSubProjectLocation + "src/main/java"),
+			want:     getAbsPath(kotlinSubProjectBuildFileKotlinLocation),
+		},
+
+		{
+			name:     "Test that the current dir (.) is returned when no build files could be found",
+			location: os.TempDir(),
+			want:     ".",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			os.Chdir(tt.location)
+			defer os.Chdir(cwd)
+
+			if got := SelectGradleBuildFile(); got != tt.want {
+				t.Errorf("SelectGradleBuildFile() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSelectGradleBinary(t *testing.T) {
+	tests := []struct {
+		name     string
+		location string
+		pathFunc func()
+		want     string
+	}{
+		{
+			name:     "Test gradlew script is selected when launched from root of projet",
+			location: getAbsPath(kotlinProjectLocation),
+			want:     getAbsPath(kotlinProjectLocation + gradlewFile),
+		},
+
+		{
+			name:     "Test gradlew script is selected when launched from sub project",
+			location: getAbsPath(kotlinSubProjectLocation),
+			want:     getAbsPath(kotlinProjectLocation + gradlewFile),
+		},
+
+		{
+			name:     "Test gradlew script is selected when launched from java dir",
+			location: getAbsPath(kotlinSubProjectLocation + "src/main/java"),
+			want:     getAbsPath(kotlinProjectLocation + gradlewFile),
+		},
+
+		{
+			name:     "Test gradle binary is selected when no build files are found",
+			location: os.TempDir(),
+			pathFunc: func() {
+				os.Setenv("PATH", getAbsPath(gradleLocation))
+			},
+			want: getAbsPath(gradleLocation + gradleBinary),
+		},
+
+		{
+			name:     "Test empty string is returned when no gradlew script is found and gradle isnt installed",
+			location: os.TempDir(),
+			pathFunc: func() {
+				os.Setenv("PATH", "")
+			},
+			want: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// cleanup after test
+			path := os.Getenv("PATH")
+			defer os.Setenv("PATH", path)
+
+			if tt.pathFunc != nil {
+				tt.pathFunc()
+			}
+
+			os.Chdir(tt.location)
+			defer os.Chdir(cwd)
+
+			if got := SelectGradleBinary(); got != tt.want {
+				t.Errorf("SelectGradleBinary() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestStart(t *testing.T) {
+	tests := []struct {
+		name     string
+		location string
+		pathFunc func()
+		want     int
+	}{
+		{
+			name:     "Test happy path",
+			location: getAbsPath(kotlinProjectLocation),
+			want:     0,
+		},
+
+		{
+			name:     "Test error path",
+			location: os.TempDir(),
+			pathFunc: func() {
+				os.Setenv("PATH", "")
+			},
+			want: 1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// cleanup after test
+			path := os.Getenv("PATH")
+			defer os.Setenv("PATH", path)
+
+			if tt.pathFunc != nil {
+				tt.pathFunc()
+			}
+
+			os.Chdir(tt.location)
+			defer os.Chdir(cwd)
+
+			if got := Start(); got != tt.want {
+				t.Errorf("Start() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_main(t *testing.T) {
+	os.Chdir(getAbsPath(kotlinProjectLocation))
 	defer os.Chdir(cwd)
 
 	main()
-}
-
-func Test_SelectGradleBinary(t *testing.T) {
-	absGradlePath, _ := filepath.Abs(gradleLocation)
-
-	path := os.Getenv("PATH")
-
-	// clean PATH
-	os.Setenv("PATH", "")
-
-	// test that error path before adding binary to path
-	os.Chdir("/tmp")
-	result := selectGradleBinary()
-
-	if result != "" {
-		t.Errorf("empty string should have been returned, got = %s", result)
-	}
-
-	// set path back
-	os.Setenv("PATH", path)
-
-	// check other paths
-	os.Setenv("PATH", os.Getenv("PATH")+":"+absGradlePath)
-	locations := []string{
-		groovyProjectLocation,
-		groovySubProjectLocation,
-		kotlinProjectLocation,
-		kotlinSubProjectLocation,
-		"/tmp",
-	}
-
-	for _, location := range locations {
-		os.Chdir(location)
-		result := selectGradleBinary()
-
-		if result == "" {
-			t.Error("Correct gradle binary not selected")
-		}
-	}
-
-	// change the current working directory back so it doesn't effect the other tests
-	defer os.Chdir(cwd)
-}
-
-func Test_SelectGradleBuildFile(t *testing.T) {
-	type scenarios struct {
-		location string
-		expected string
-	}
-
-	tests := []scenarios{
-		// cd to groovy project and find default build file
-		{
-			location: getAbsPath(groovyProjectLocation),
-			expected: getAbsPath(groovyProjectBuildFileLocation),
-		},
-		// cd to kotlin project and find default build file
-		{
-			location: getAbsPath(kotlinProjectLocation),
-			expected: getAbsPath(kotlinProjectBuildFileKotlinLocation),
-		},
-		// cd to groovy sub project and find default build file
-		{
-			location: getAbsPath(groovySubProjectLocation),
-			expected: getAbsPath(groovySubProjectBuildFileLocation),
-		},
-		// cd to kotlin sub project and find default build file
-		{
-			location: getAbsPath(kotlinSubProjectLocation),
-			expected: getAbsPath(kotlinSubProjectBuildFileKotlinLocation),
-		},
-		// if default build files are not found check that cwd is returned
-		{
-			location: "/tmp",
-			expected: ".",
-		},
-	}
-
-	for _, test := range tests {
-		os.Chdir(test.location)
-		result := selectGradleBuildFile()
-		if result != test.expected {
-			t.Errorf("actual: %s, expected: %s", result, test.expected)
-		}
-	}
-
-	defer os.Chdir(cwd)
 }
 
 func getCurrentWorkingDirectory() string {

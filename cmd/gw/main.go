@@ -7,9 +7,8 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/aaron-vaz/golang-utils/pkg/fsutil"
-
 	"github.com/aaron-vaz/golang-utils/pkg/errorutil"
+	"github.com/aaron-vaz/golang-utils/pkg/fsutil"
 )
 
 // default gradle values
@@ -21,13 +20,20 @@ const (
 )
 
 func main() {
-	gradleBinary := selectGradleBinary()
+	os.Exit(Start())
+}
+
+// Start the program
+// return 0 if execution was successful
+// return 1 otherwise
+func Start() int {
+	gradleBinary := SelectGradleBinary()
 
 	if gradleBinary == "" {
-		os.Exit(1)
+		return 1
 	}
 
-	buildFile := selectGradleBuildFile()
+	buildFile := SelectGradleBuildFile()
 
 	log.Printf("Using '%s' to run build file '%s' \n", gradleBinary, buildFile)
 	fmt.Println("")
@@ -40,12 +46,13 @@ func main() {
 	cmd.Stderr = os.Stderr
 
 	// run the command
-	err = cmd.Run()
-	errorutil.ErrCheck(err, true)
+	errorutil.ErrCheck(cmd.Run(), true)
+
+	return 0
 }
 
-// selectGradleBinary find which gradle binary to use for the project
-func selectGradleBinary() string {
+// SelectGradleBinary find which gradle binary to use for the project
+func SelectGradleBinary() string {
 	// look for project gradlew file
 	foundGradlew := fsutil.FindFile(gradlewFile, "")
 	if foundGradlew != "" {
@@ -62,28 +69,24 @@ func selectGradleBinary() string {
 	}
 
 	log.Printf("%s binary not found in your PATH: \n%s", gradleBinary, os.Getenv("PATH"))
-
 	return ""
 }
 
-// getGradleBuildFileLocation first checks for a groovy build file in the working directory
+// SelectGradleBuildFile first checks for a groovy build file in the working directory
 // if the groovy build file is not found it next checks for a kotlin build file
 // if both checks find nothing we return the current working directory and let gradle figure out whether the cwd is a gradle project
-func selectGradleBuildFile() string {
-	groovyBuildFile := fsutil.FindFile(gradleGroovyBuildFile, "")
-	kotlinBuildFile := fsutil.FindFile(gradleKotlinBuildFile, "")
-
+func SelectGradleBuildFile() string {
 	// check if the groovy build file was found
-	if groovyBuildFile != "" {
+	if groovyBuildFile := fsutil.FindFile(gradleGroovyBuildFile, ""); groovyBuildFile != "" {
 		return groovyBuildFile
-
-		// if the groovy build file was not found look for a kotlin one
-	} else if kotlinBuildFile != "" {
-		return kotlinBuildFile
-
-		// if both dont exist we assume that the project is not a gradle project
-	} else {
-		log.Printf("Cannot find gradle build file %s or %s in the project", gradleGroovyBuildFile, gradleKotlinBuildFile)
-		return "."
 	}
+
+	// if the groovy build file was not found look for a kotlin one
+	if kotlinBuildFile := fsutil.FindFile(gradleKotlinBuildFile, ""); kotlinBuildFile != "" {
+		return kotlinBuildFile
+	}
+
+	// if both dont exist we assume that the project might have a new type of build file so we let gradle decide what to do
+	log.Printf("Cannot find gradle build file %s or %s in the project", gradleGroovyBuildFile, gradleKotlinBuildFile)
+	return "."
 }
