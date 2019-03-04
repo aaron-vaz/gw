@@ -5,7 +5,7 @@ env:
 go:
 - 1.12.x
 script:
-- make build
+- make release
 deploy:
   provider: releases
   api_key:
