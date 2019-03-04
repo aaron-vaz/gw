@@ -3,8 +3,12 @@ REPO:=/go/src/github.com/aaron-vaz/gw
 BUILD_DIR:=${PWD}/build
 BINARY_DIR:=${BUILD_DIR}/binaries
 
-# Setup the -ldflags option for go build here, interpolate the variable values
-LDFLAGS:=-ldflags "-s -w"
+NAME:=gw
+
+GCFLAGS:=-gcflags "all=-trimpath=${PWD}"
+ASMFLAGS:=-asmflags "all=-trimpath=${PWD}"
+LDFLAGS:=-ldflags "-s -w -extldflags=-zrelro -extldflags=-znow"
+
 
 clean:
 	@-rm -rf ${BUILD_DIR}
@@ -16,12 +20,15 @@ get_dependencies:
 	@go get github.com/mitchellh/gox
 
 test:
-	@go test -cover ./cmd/gw
+	@go test -cover ./cmd/${NAME}
 
-build: setup_workspace get_dependencies test
-	@gox -verbose ${LDFLAGS} -os="windows linux darwin" -arch="amd64" -output="${BINARY_DIR}/gw_{{.OS}}_{{.Arch}}" ./cmd/gw
+build:
+	@go build ${GCFLAGS} ${ASMFLAGS} ${LDFLAGS} -o ${BUILD_DIR}/${NAME} ./cmd/${NAME}
+
+release: setup_workspace get_dependencies test
+	@gox -verbose ${GCFLAGS} ${LDFLAGS} -os="windows linux darwin" -arch="amd64" -output="${BINARY_DIR}/${NAME}_{{.OS}}_{{.Arch}}" ./cmd/${NAME}
 
 docker:
-	@docker run --rm -v ${PWD}:${REPO} -w=${REPO} -e "GO111MODULE=on" golang make build
+	@docker run --rm -v ${PWD}:${REPO} -w=${REPO} -e "GO111MODULE=on" golang make release
 
-.PHONY: docker build test clean setup_workspace get_dependencies
+.PHONY: docker build release test clean setup_workspace get_dependencies
