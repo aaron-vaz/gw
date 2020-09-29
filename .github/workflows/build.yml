@@ -8,34 +8,55 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
-      - uses: actions/setup-go@v1
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +%Y%m%d)"
+      - name: Get short hash
+        id: git_hash
+        run: echo "::set-output name=hash::$(echo ${GITHUB_SHA::7})"
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: Setup Environment
+        uses: actions/setup-go@v1
         with:
-          go-version: '1.15.2'
-      - run: make release
-      - uses: actions/create-release@v1
+          go-version: "1.15.2"
+      - name: Build
+        run: make release
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_NAME: ${{ steps.date.outputs.date }}.${{ steps.git_hash.outputs.hash }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          tag_name: ${{ env.RELEASE_NAME }}
+          release_name: Release ${{ env.RELEASE_NAME }}
           draft: false
           prerelease: false
-      - uses: actions/upload-release-asset@v1
+      - name: Upload Mac Binary
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: build/binaries/gw_darwin_amd64
-      - uses: actions/upload-release-asset@v1
+          asset_name: gw_darwin_amd64
+          asset_content_type: application/octet-stream
+      - name: Upload Linux Binary
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: build/binaries/gw_linux_amd64
-      - uses: actions/upload-release-asset@v1
+          asset_name: gw_linux_amd64
+          asset_content_type: application/octet-stream
+      - name: Upload Windows Binary
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: build/binaries/gw_windows_amd64
+          asset_path: build/binaries/gw_windows_amd64.exe
+          asset_name: gw_windows_amd64.exe
+          asset_content_type: application/octet-stream
