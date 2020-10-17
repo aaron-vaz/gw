@@ -1,4 +1,4 @@
-# Go gdub ![](https://api.travis-ci.org/aaron-vaz/gw.svg?branch=master)
+# Go gdub
 Based on the original [gdub](https://github.com/dougborg/gdub), this project is a golang gradle wrapper wrapper :smile:. 
 As the name suggests it is a wrapper for the gradle wrapper which allows you to execute gradle tasks from anywhere in your project
 
