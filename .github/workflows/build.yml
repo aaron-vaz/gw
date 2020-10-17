@@ -15,7 +15,7 @@ jobs:
         id: git_hash
         run: echo "::set-output name=hash::$(echo ${GITHUB_SHA::7})"
       - name: Checkout
-        uses: actions/checkout@master
+        uses: actions/checkout@v2
       - name: Setup Environment
         uses: actions/setup-go@v1
         with:
@@ -60,3 +60,13 @@ jobs:
           asset_path: build/binaries/gw_windows_amd64.exe
           asset_name: gw_windows_amd64.exe
           asset_content_type: application/octet-stream
+      - name: Update Latest Version
+        env:
+          LATEST_VERSION: ${{ steps.date.outputs.date }}.${{ steps.git_hash.outputs.hash }}
+        run: |
+          echo $LATEST_VERSION > version
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .
+          git commit -m "bump version"
+          git push
